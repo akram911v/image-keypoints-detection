@@ -61,6 +61,82 @@ class KeypointDetector:
         print(f"Keypoints visualization saved as: {output_filename}")
         return output_filename
 
+    def compare_detectors(self, image):
+        """Compare performance of all detectors on the same image"""
+        print("\n" + "="*50)
+        print("DETECTOR COMPARISON")
+        print("="*50)
+        
+        results = []
+        
+        for detector_name in self.detectors.keys():
+            print(f"\nTesting {detector_name}...")
+            
+            # Time the detection process
+            start_time = cv2.getTickCount()
+            keypoints, descriptors = self.detect_keypoints(image, detector_name)
+            end_time = cv2.getTickCount()
+            
+            # Calculate processing time
+            time_taken = (end_time - start_time) / cv2.getTickFrequency()
+            
+            # Store results
+            result = {
+                'detector': detector_name,
+                'keypoints_count': len(keypoints),
+                'processing_time': time_taken,
+                'has_descriptors': descriptors is not None,
+                'descriptor_size': descriptors.shape if descriptors is not None else None
+            }
+            results.append(result)
+            
+            print(f"  Keypoints: {result['keypoints_count']}")
+            print(f"  Time: {result['processing_time']:.4f}s")
+            if result['has_descriptors']:
+                print(f"  Descriptor shape: {result['descriptor_size']}")
+        
+        return results
+    
+    def plot_comparison(self, results):
+        """Create comparison plots"""
+        # Extract data for plotting
+        detectors = [r['detector'] for r in results]
+        keypoints_count = [r['keypoints_count'] for r in results]
+        processing_times = [r['processing_time'] for r in results]
+        
+        # Create subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+        
+        # Plot 1: Keypoints count
+        bars1 = ax1.bar(detectors, keypoints_count, color=['blue', 'green', 'red'])
+        ax1.set_title('Number of Keypoints Detected')
+        ax1.set_ylabel('Keypoint Count')
+        ax1.grid(True, alpha=0.3)
+        
+        # Add value labels on bars
+        for bar in bars1:
+            height = bar.get_height()
+            ax1.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{int(height)}', ha='center', va='bottom')
+        
+        # Plot 2: Processing time
+        bars2 = ax2.bar(detectors, processing_times, color=['orange', 'purple', 'brown'])
+        ax2.set_title('Processing Time')
+        ax2.set_ylabel('Time (seconds)')
+        ax2.grid(True, alpha=0.3)
+        
+        # Add value labels on bars
+        for bar in bars2:
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height:.4f}', ha='center', va='bottom')
+        
+        plt.tight_layout()
+        plt.savefig('detector_comparison.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print("\nComparison plot saved as: detector_comparison.png")
+
 def main():
     print("Keypoint Detector - Practical Work #2")
     print("=====================================")
@@ -71,8 +147,9 @@ def main():
     # Set up command line arguments
     parser = argparse.ArgumentParser(description='Detect keypoints in an image')
     parser.add_argument('--image', type=str, required=True, help='Path to input image')
-    parser.add_argument('--detector', type=str, choices=['SIFT', 'ORB', 'BRISK'], 
-                       default='SIFT', help='Type of detector to use (default: SIFT)')
+    parser.add_argument('--detector', type=str, choices=['SIFT', 'ORB', 'BRISK', 'COMPARE'], 
+                       default='SIFT', help='Type of detector to use or COMPARE for all')
+    parser.add_argument('--compare', action='store_true', help='Run comparison of all detectors')
     
     args = parser.parse_args()
     
@@ -82,16 +159,21 @@ def main():
         print(f"Loaded image: {args.image}")
         print(f"Image size: {image.shape[1]}x{image.shape[0]}")
         
-        # Detect keypoints
-        print(f"\nUsing {args.detector} detector...")
-        keypoints, descriptors = detector.detect_keypoints(gray, args.detector)
-        
-        print(f"Number of keypoints detected: {len(keypoints)}")
-        if descriptors is not None:
-            print(f"Descriptor shape: {descriptors.shape}")
-        
-        # Visualize keypoints
-        detector.visualize_keypoints(image, keypoints, args.detector)
+        if args.detector == 'COMPARE' or args.compare:
+            # Compare all detectors
+            results = detector.compare_detectors(gray)
+            detector.plot_comparison(results)
+        else:
+            # Use single detector
+            print(f"\nUsing {args.detector} detector...")
+            keypoints, descriptors = detector.detect_keypoints(gray, args.detector)
+            
+            print(f"Number of keypoints detected: {len(keypoints)}")
+            if descriptors is not None:
+                print(f"Descriptor shape: {descriptors.shape}")
+            
+            # Visualize keypoints
+            detector.visualize_keypoints(image, keypoints, args.detector)
         
     except Exception as e:
         print(f"Error: {e}")
