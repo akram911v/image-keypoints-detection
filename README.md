@@ -1,4 +1,3 @@
-```markdown
 # Image Keypoints Detection - Practical Work #2
 
 ## Detectors and Descriptors for Computer Vision
@@ -28,4 +27,6 @@ python keypoint_detector.py --image path/to/image.jpg --detector COMPARE
 - `keypoint_detector.py` - Main code
 - `requirements.txt` - Dependencies  
 - `report.md` - Technical report
-```
+4. Commit the changes
+
+Your repository structure looks good otherwise - you have all the necessary files! Just fix the README formatting and your project will be perfect.
