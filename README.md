@@ -27,3 +27,4 @@ python keypoint_detector.py --image path/to/image.jpg --detector COMPARE
 - `keypoint_detector.py` - Main code
 - `requirements.txt` - Dependencies  
 - `report.md` - Technical report
+```
