@@ -40,9 +40,32 @@ def main():
     # Initialize detector
     detector = KeypointDetector()
     
-    # Example usage (we'll add more functionality later)
-    print("Available detectors:", list(detector.detectors.keys()))
-    print("Basic structure ready - we'll add more features in next steps")
+    # Set up command line arguments
+    parser = argparse.ArgumentParser(description='Detect keypoints in an image')
+    parser.add_argument('--image', type=str, required=True, help='Path to input image')
+    parser.add_argument('--detector', type=str, choices=['SIFT', 'ORB', 'BRISK'], 
+                       default='SIFT', help='Type of detector to use (default: SIFT)')
+    
+    args = parser.parse_args()
+    
+    try:
+        # Load image
+        image, gray = detector.load_image(args.image)
+        print(f"Loaded image: {args.image}")
+        print(f"Image size: {image.shape[1]}x{image.shape[0]}")
+        
+        # Detect keypoints
+        print(f"\nUsing {args.detector} detector...")
+        keypoints, descriptors = detector.detect_keypoints(gray, args.detector)
+        
+        print(f"Number of keypoints detected: {len(keypoints)}")
+        if descriptors is not None:
+            print(f"Descriptor shape: {descriptors.shape}")
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        print("Please make sure the image path is correct and the image format is supported.")
 
 if __name__ == "__main__":
+    main()
     main()
